@@ -76,7 +76,6 @@ class RequestHandler(BaseHTTPRequestHandler):
         data = predict(text, trained_model, device, w2i)
         # Construct the response data
         response_data = {
-            "message": "Request received successfully",
             "data": data
         }
         response_body = json.dumps(response_data).encode('utf-8')

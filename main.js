@@ -20,11 +20,8 @@ function sendData(sentence) {
         };
 
         let req = http.request(options, async function (res) {
-            //console.log('STATUS:', res.statusCode);
-            //console.log('HEADERS:', JSON.stringify(res.headers));
 
             res.setEncoding('utf8');
-
             var body = [];
 
             res.on('data', function (chunk) {
@@ -58,26 +55,41 @@ function sendData(sentence) {
 const app = express();
 app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.urlencoded({extended:true}));
+
+// view engine setup
+app.set('views', (__dirname + '/public/views'));
+app.set('view engine', 'ejs');
   
 app.get("/", function(req, res) {
     console.log('user');
-  //res.sendFile(__dirname + "/public/index.html");
-  res.sendFile(__dirname + "/public");
+    res.render('index', {analysed_sentence:'Your input sentence will appear here once you analyse it', feeling:'Feeling ?', probability:'confidence'});
+    //res.sendFile(__dirname + "/public");
 });
   
 app.post("/", async function(req, res) {
-    var sentence = String(req.body.sentence);  
+    var sentence = String(req.body.sentence);
     console.log(sentence);
-    const payload = JSON.stringify({ msg: sentence });
 
+    //receive prediction from server
     response = await sendData(sentence).then((data) => {
         const response = {
-            pred: data
+            probability: data
         };
     return response;
     });
 
-    res.send(response);
+    probability = response['probability'];
+    feeling = "Positive :)";
+    if (probability < 0.5){
+        probability = 1 - probability;
+        feeling = "Negative :(";
+    }
+
+    probability = probability.toFixed(2);
+
+    res.render('index', {analysed_sentence:sentence,
+                         feeling: feeling,  
+                         probability:probability});
     
 });
   
